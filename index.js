@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const ObjectId = require("mongodb").ObjectId;
 require("dotenv").config();
 const MongoClient = require("mongodb").MongoClient;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.pv2sf.mongodb.net/${process.env.DB_DATA}?retryWrites=true&w=majority`;
@@ -64,12 +65,31 @@ client.connect((err) => {
       res.send(doctors.length > 0);
     });
   });
+
   app.get("/showpayment", (req, res) => {
     paymentCollection.find({}).toArray((err, doc) => {
       res.send(doc);
     });
   });
   // perform actions on the collection object
+  app.delete("/delete/:id", (req, res) => {
+    collection.deleteOne({ _id: ObjectId(req.params.id) }).then((result) => {
+      console.log(result);
+      res.send(result.deletedCount > 0);
+    });
+  });
+  app.patch("/update/:id", (req, res) => {
+    paymentCollection
+      .updateOne(
+        { _id: ObjectId(req.params.id) },
+        {
+          $set: { status: req.body.statusUpdate },
+        }
+      )
+      .then((result) => {
+        res.send(result.matchedCount > 0);
+      });
+  });
 });
 
 app.listen(port);
